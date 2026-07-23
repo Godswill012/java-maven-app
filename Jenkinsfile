@@ -58,6 +58,11 @@ pipeline {
                 }
             }
         }
+
+    }
+
+}
+
         /*
         stage('commit version update'){
             steps {
