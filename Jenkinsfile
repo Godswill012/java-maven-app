@@ -1,6 +1,6 @@
 #!/usr/bin/env groovy
 
-library identifier: 'jenkins-shared-library@master', retriever: modernSCM(
+library identifier: 'jenkins-shared-library0@master', retriever: modernSCM(
     [$class: 'GitSCMSource',
     remote: 'https://github.com/Godswill012/java-maven-app.git',
     credentialsID: 'github-credentials'
@@ -61,7 +61,7 @@ pipeline {
         stage('commit version update'){
             steps {
                 script {
-                    withCredentials([usernamePassword(credentialsId: 'gitlab-credentials', passwordVariable: 'PASS', usernameVariable: 'USER')]){
+                    withCredentials([usernamePassword(credentialsId: 'github-credentials', passwordVariable: 'PASS', usernameVariable: 'USER')]){
                         sh 'git remote set-url origin https://github.com/Godswill012/java-maven-app.git'
                         sh 'git add .'
                         sh 'git commit -m "ci: version bump"'
