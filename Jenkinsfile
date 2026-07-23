@@ -2,7 +2,7 @@
 
 library identifier: 'jenkins-shared-library0@master', retriever: modernSCM(
     [$class: 'GitSCMSource',
-    remote: 'https://github.com/Godswill012/jenkins-shared-library0.git',
+    remote: 'https://github.com/Godswill012/java-maven-app.git',
     credentialsID: 'github-credentials'
     ]
 )
@@ -46,12 +46,12 @@ pipeline {
             steps {
                 script {
                     echo 'deploying docker image to EC2...'
-
-                    def shellCmd = "bash ./server-cmds.sh ${IMAGE_NAME}"
-                    def ec2Instance = "ec2-user@18.118.185.115"
+                    def dockerComposeCmd = "docker-compose -f docker-compose.yaml up --detach"
+                    #def shellCmd = "bash ./server-cmds.sh ${IMAGE_NAME}"
+                    #def ec2Instance = "ec2-user@18.118.185.115"
 
                     sshagent(['ec2-server-key']) {
-                        sh "scp server-cmds.sh ec2-user@18.118.185.115:/home/ec2-user"
+                        #sh "scp server-cmds.sh ec2-user@18.118.185.115:/home/ec2-user"
                         sh "scp docker-compose.yaml ec2-user@18.118.185.115:/home/ec2-user"
                         sh "ssh -o StrictHostKeyChecking=no ec2-user@18.118.185.115 ${shellCmd}"
                     }
