@@ -2,7 +2,7 @@
 
 library identifier: 'jenkins-shared-library@master', retriever: modernSCM(
     [$class: 'GitSCMSource',
-    remote: 'git@github.com:Godswill012/java-maven-app.git',
+    remote: 'https://github.com/Godswill012/java-maven-app.git',
     credentialsID: 'github-credentials'
     ]
 )
@@ -10,7 +10,7 @@ library identifier: 'jenkins-shared-library@master', retriever: modernSCM(
 pipeline {
     agent any
     tools {
-        maven 'Maven'
+        maven 'Maven-3.9'
     }
     environment {
         IMAGE_NAME = 'godswill012/demo-app:1.0'
