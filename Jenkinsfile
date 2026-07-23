@@ -52,7 +52,7 @@ pipeline {
 
                        sh """
                            ssh -o StrictHostKeyChecking=no ec2-user@18.118.185.115 \
-                           "docker compose -f /home/ec2-user/docker-compose.yaml up -d"
+                           "docker-compose -f /home/ec2-user/docker-compose.yaml up -d"
                        """
                     }
                 }
