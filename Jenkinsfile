@@ -42,22 +42,22 @@ pipeline {
                 }
             }
         } 
-        stage("deploy") {
-            steps {
-                script {
-                    echo 'deploying docker image to EC2...'
-                    def dockerComposeCmd = "docker-compose -f docker-compose.yaml up --detach"
+       stage('deploy') {
+           steps {
+               script {
+                   echo 'deploying docker image to EC2...'
 
-                  
+                   sshagent(['ec2-server-key']) {
+                       sh "scp docker-compose.yaml ec2-user@18.118.185.115:/home/ec2-user"
 
-                    sshagent(['ec2-server-key']) {
-                       
-                        sh "scp docker-compose.yaml ec2-user@18.118.185.115:/home/ec2-user"
-                        sh "ssh -o StrictHostKeyChecking=no ec2-user@18.118.185.115 ${shellCmd}"
-                    }
-                }
-            }               
+                       sh """
+                           ssh -o StrictHostKeyChecking=no ec2-user@18.118.185.115 \
+                           "docker compose -f /home/ec2-user/docker-compose.yaml up -d"
+                       """
+            }
         }
+    }
+}
         stage('commit version update'){
             steps {
                 script {
