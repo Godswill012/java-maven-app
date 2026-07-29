@@ -2,30 +2,46 @@
 
 pipeline {
     agent any
+
     stages {
         stage('build app') {
             steps {
-               script {
-                   echo "building the application..."
-               }
-            }
-        }
-        stage('build image') {
-            steps {
                 script {
-                    echo "building the docker image..."
+                    echo 'building the application...'
                 }
             }
         }
-        stage('deploy') {
-            environment {
-                AWS_ACCESS_KEY_ID = credentials('jenkins_aws_access_key_id')
-                AWS_SECRET_ACCESS_KEY = credentials('jenkins_aws_secret_access_key')
-            }
+
+        stage('build image') {
             steps {
                 script {
-                   echo 'deploying docker image...'
-                   sh 'kubectl create deployment nginx-deployment --image=nginx'
+                    echo 'building the docker image...'
+                }
+            }
+        }
+
+        stage('deploy') {
+            environment {
+                AWS_ACCESS_KEY_ID     = credentials('jenkins_aws_access_key_id')
+                AWS_SECRET_ACCESS_KEY = credentials('jenkins_aws_secret_access_key')
+                AWS_DEFAULT_REGION    = 'us-east-2'
+            }
+
+            steps {
+                script {
+                    echo 'deploying docker image...'
+
+                    sh '''
+                        aws eks update-kubeconfig \
+                          --region us-east-2 \
+                          --name demo-cluster
+
+                        kubectl config current-context
+                        kubectl get nodes
+
+                        kubectl create deployment nginx-deployment \
+                          --image=nginx
+                    '''
                 }
             }
         }
