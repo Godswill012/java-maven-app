@@ -6,7 +6,7 @@ pipeline {
         maven 'maven-3.9'
     }
     environment {
-        DOCKER_REPO_SERVER: '555175526044.dkr.ecr.us-east-2.amazonaws.com'
+        DOCKER_REPO_SERVER = '555175526044.dkr.ecr.us-east-2.amazonaws.com'
         DOCKER_REPO = "${DOCKER_REPO_SERVER}/java-maven-app"
     }
     stages {
