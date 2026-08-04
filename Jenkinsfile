@@ -9,6 +9,9 @@ library identifier: 'jenkins-shared-library0@master', retriever: modernSCM(
 
 pipeline {   
   agent any
+  parameters {
+    choice(name: 'TF_ACTION', choices: ['apply', 'destroy'], description: 'Choose whether to provision or destroy the Terraform-managed infrastructure.')
+  }
   tools {
     maven 'maven-3.9'
   }
@@ -17,6 +20,9 @@ pipeline {
   }
   stages {
     stage("build app") {
+      when {
+        expression { params.TF_ACTION == 'apply' }
+      }
       steps {
         script {
           echo 'building application jar...'
@@ -25,6 +31,9 @@ pipeline {
       }
     }
     stage("build image") {
+      when {
+        expression { params.TF_ACTION == 'apply' }
+      }
       steps {
         script {
           echo 'building docker image...'
@@ -44,16 +53,23 @@ pipeline {
         script {
           dir('terraform') {
             sh "terraform init"
-            sh "terraform apply --auto-approve"
-            EC2_PUBLIC_IP = sh(
-              script: "terraform output ec2-public_ip",
-              returnStdout: true
-            ).trim()
+            if (params.TF_ACTION == 'destroy') {
+              sh "terraform destroy --auto-approve"
+            } else {
+              sh "terraform apply --auto-approve"
+              EC2_PUBLIC_IP = sh(
+                script: "terraform output ec2-public_ip",
+                returnStdout: true
+              ).trim()
+            }
           }
         }
       }
     }
     stage("deploy") {
+      when {
+        expression { params.TF_ACTION == 'apply' }
+      }
       environment {
         DOCKER_CREDS = credentials('docker-hub-repo')
       }
