@@ -1,24 +1,46 @@
-variable vpc_cidr_block {
+variable "vpc_cidr_block" {
+  type    = string
   default = "10.0.0.0/16"
 }
-variable subnet_cidr_block {
+
+variable "subnet_cidr_block" {
+  type    = string
   default = "10.0.10.0/24"
 }
-variable avail_zone {
-  default = "eu-central-1a"
+
+variable "avail_zone" {
+  type    = string
+  default = "us-east-2a"
 }
-variable env_prefix {
+
+variable "env_prefix" {
+  type    = string
   default = "dev"
 }
-variable my_ip {
-  default = "85.246.32.98/32"
+
+variable "my_ip" {
+  type = string
+  default = "172.13.111.146/32"
 }
-variable jenkins_ip {
-  default = "165.232.114.245/32"
+
+variable "jenkins_ip" {
+  type = string
+  default = "142.93.121.201/32"
 }
-variable instance_type {
+
+variable "instance_type" {
+  type    = string
   default = "t2.micro"
 }
-variable region {
-  default = "eu-central-1"
+
+variable "region" {
+  type    = string
+  default = "us-east-2"
 }
+
+variable cidr_block {
+  default = "0.0.0.0/0"
+}
+
+
+
