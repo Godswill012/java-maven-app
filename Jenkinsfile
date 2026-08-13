@@ -9,10 +9,10 @@ pipeline {
         script {
           echo "copying all neccessary files to ansible control node"
           sshagent(['ansible-server-key']) {
-            sh "scp -o StrictHostKeyChecking=no ansible/* root@143.244.173.156:/root"
+            sh "scp -o StrictHostKeyChecking=no ansible/* root@${ANSIBLE_SERVER}:/root"
 
             withCredentials([sshUserPrivateKey(credentialsId: 'ansible-key', keyFileVariable: 'keyfile', usernameVariable: 'user')]) {
-              sh 'scp $keyfile root@143.244.173.156:/root/ssh-key.pem'
+              sh 'scp $keyfile root@${ANSIBLE_SERVER}:/root/ssh-key.pem'
             }
           }
         }
@@ -24,7 +24,7 @@ pipeline {
           echo "calling ansible playbook to configure ec2 instances"
           def remote = [:]
           remote.name = "ansible-server"
-          remote.host = "143.244.173.156"
+          remote.host = "${ANSIBLE_SERVER}"
           remote.allowAnyHosts = true
 
           withCredentials([sshUserPrivateKey(credentialsId: 'ansible-server-key', keyFileVariable: 'keyfile', usernameVariable: 'user')]) {
