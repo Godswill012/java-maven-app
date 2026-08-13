@@ -12,18 +12,19 @@
         name: docker
         state: started
 
-- name: Install Docker-compose
+- name: Install docker-compose
   hosts: all
+  become: yes
   tasks:
-    - name: Create docker-compose directory
+    - name: create docker-compose directory
       file:
-        path: ~/.docker/cli-plugins
+        path: /usr/local/lib/docker/cli-plugins
         state: directory
-    - name: Get architecture of remote machine
-      shell: uname -m
+    - name: Get architecture of the remote host
+      command: uname -m
       register: remote_arch
     - name: Install docker-compose
       get_url:
-        url: "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-{{ remote_arch.stdout }}"
-        dest: ~/.docker/cli-plugins/docker-compose
+        url: "https://github.com/docker/compose/releases/download/v5.1.4/docker-compose-linux-{{ remote_arch.stdout }}"
+        dest: /usr/local/lib/docker/cli-plugins/docker-compose
         mode: +x
