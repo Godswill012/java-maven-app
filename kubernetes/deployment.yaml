@@ -14,8 +14,15 @@ spec:
       labels:
         app: $APP_NAME
     spec:
-      imagePullSecrets:
-        - name: aws-registry-key
+      # Previous approach:
+      # The manually configured EKS environment used an ECR registry
+      # secret to authenticate when pulling images from private ECR.
+      #
+      # imagePullSecrets:
+      #   - name: aws-registry-key
+      #
+      # The current Terraform-provisioned EKS managed node group uses
+      # its IAM role with ECR read permissions instead.
       containers:
         - name: $APP_NAME
           image: $DOCKER_REPO:$IMAGE_NAME

@@ -40,28 +40,26 @@ pipeline {
         }
 
         stage('build image') {
+            environment {
+                AWS_ACCESS_KEY_ID = credentials('jenkins_aws_access_key_id')
+                AWS_SECRET_ACCESS_KEY = credentials('jenkins_aws_secret_access_key')
+                AWS_DEFAULT_REGION = 'us-east-2'
+            }
+
             steps {
                 script {
                     echo 'building the docker image...'
 
-                    withCredentials([
-                        usernamePassword(
-                            credentialsId: 'ecr-credentials',
-                            passwordVariable: 'PASS',
-                            usernameVariable: 'USER'
-                        )
-                    ]) {
-                        sh '''
-                            printf %s "$PASS" |
-                            docker login \
-                                --username "$USER" \
-                                --password-stdin "$DOCKER_REPO_SERVER"
-                        '''
+                    sh '''
+                        aws ecr get-login-password --region "$AWS_DEFAULT_REGION" |
+                        docker login \
+                            --username AWS \
+                            --password-stdin "$DOCKER_REPO_SERVER"
+                    '''
 
-                        sh 'docker build -t "$DOCKER_REPO:$IMAGE_NAME" .'
-                        sh 'docker push "$DOCKER_REPO:$IMAGE_NAME"'
-                    }
-                }
+                    sh 'docker build -t "$DOCKER_REPO:$IMAGE_NAME" .'
+                    sh 'docker push "$DOCKER_REPO:$IMAGE_NAME"'
+               }
             }
         }
 
@@ -76,6 +74,8 @@ pipeline {
             steps {
                 script {
                     echo 'deploying docker image...'
+
+                    sh 'aws eks update-kubeconfig --region "$AWS_DEFAULT_REGION" --name myapp-eks-cluster'
 
                     sh 'envsubst < kubernetes/deployment.yaml | kubectl apply -f -'
                     sh 'envsubst < kubernetes/service.yaml | kubectl apply -f -'
