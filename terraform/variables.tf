@@ -25,7 +25,7 @@ variable "my_ip" {
 
 variable "jenkins_ip" {
   type = string
-  default = "142.93.121.201/32"
+  default = "192.34.56.63/32"
 }
 
 variable "instance_type" {
