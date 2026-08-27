@@ -57,12 +57,12 @@ pipeline {
          dir('terraform') {
 
            if (params.TF_ACTION == 'destroy') {
-             sh 'terraform init -reconfigure'
+             sh 'terraform init'
              sh 'terraform destroy --auto-approve'
              sh './delete-backend.sh'
            } else {
              sh './create-backend.sh'
-             sh 'terraform init -reconfigure'
+             sh 'terraform init'
              sh 'terraform apply --auto-approve'
              EC2_PUBLIC_IP = sh(
                script: 'terraform output -raw ec2-public_ip',
