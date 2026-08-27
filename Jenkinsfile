@@ -45,27 +45,35 @@ pipeline {
     }
     stage("provision server") {
       environment {
-        AWS_ACCESS_KEY_ID = credentials('jenkins_aws_access_key_id')
+        AWS_ACCESS_KEY_ID     = credentials('jenkins_aws_access_key_id')
         AWS_SECRET_ACCESS_KEY = credentials('jenkins_aws_secret_access_key')
-        TF_VAR_env_prefix = 'test'
-      }
-      steps {
-        script {
-          dir('terraform') {
-            sh "terraform init"
-            if (params.TF_ACTION == 'destroy') {
-              sh "terraform destroy --auto-approve"
-            } else {
-              sh "terraform apply --auto-approve"
-              EC2_PUBLIC_IP = sh(
-                script: "terraform output ec2-public_ip",
-                returnStdout: true
-              ).trim()
-            }
-          }
-        }
-      }
-    }
+        AWS_DEFAULT_REGION    = 'us-east-2'
+        TF_VAR_env_prefix     = 'test'
+        TF_STATE_BUCKET       = 'josep-myapp-tf-state-2026'
+     }
+
+     steps {
+       script {
+         dir('terraform') {
+
+           if (params.TF_ACTION == 'destroy') {
+             sh 'terraform init'
+             sh 'terraform destroy --auto-approve'
+             sh './delete-backend.sh'
+           } else {
+             sh './create-backend.sh'
+             sh 'terraform init'
+             sh 'terraform apply --auto-approve'
+             EC2_PUBLIC_IP = sh(
+               script: 'terraform output -raw ec2-public_ip',
+               returnStdout: true
+             ).trim()
+           }
+         }
+       }
+     }
+   }
+ 
     stage("deploy") {
       when {
         expression { params.TF_ACTION == 'apply' }
