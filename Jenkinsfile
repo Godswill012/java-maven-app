@@ -7,22 +7,32 @@ library identifier: 'jenkins-shared-library0@master', retriever: modernSCM(
   ]
 )
 
-pipeline {   
+pipeline {
   agent any
+
   parameters {
-    choice(name: 'TF_ACTION', choices: ['apply', 'destroy'], description: 'Choose whether to provision or destroy the Terraform-managed infrastructure.')
+    choice(
+      name: 'TF_ACTION',
+      choices: ['apply', 'destroy'],
+      description: 'Choose whether to provision or destroy the Terraform-managed infrastructure.'
+    )
   }
+
   tools {
     maven 'maven-3.9'
   }
+
   environment {
     IMAGE_NAME = 'godswill012/demo-app:java-maven-2.0'
   }
+
   stages {
+
     stage("build app") {
       when {
         expression { params.TF_ACTION == 'apply' }
       }
+
       steps {
         script {
           echo 'building application jar...'
@@ -30,10 +40,12 @@ pipeline {
         }
       }
     }
+
     stage("build image") {
       when {
         expression { params.TF_ACTION == 'apply' }
       }
+
       steps {
         script {
           echo 'building docker image...'
@@ -43,6 +55,7 @@ pipeline {
         }
       }
     }
+
     stage("provision server") {
       environment {
         AWS_ACCESS_KEY_ID     = credentials('jenkins_aws_access_key_id')
@@ -50,37 +63,40 @@ pipeline {
         AWS_DEFAULT_REGION    = 'us-east-2'
         TF_VAR_env_prefix     = 'test'
         TF_STATE_BUCKET       = 'josep-myapp-tf-state-2026'
-     }
+      }
 
-     steps {
-       script {
-         dir('terraform') {
+      steps {
+        script {
+          dir('terraform') {
 
-           if (params.TF_ACTION == 'destroy') {
-             sh 'terraform init'
-             sh 'terraform destroy --auto-approve'
-             sh './delete-backend.sh'
-           } else {
-             sh './create-backend.sh'
-             sh 'terraform init'
-             sh 'terraform apply --auto-approve'
-             EC2_PUBLIC_IP = sh(
-               script: 'terraform output -raw ec2-public_ip',
-               returnStdout: true
-             ).trim()
-           }
-         }
-       }
-     }
-   }
- 
+            if (params.TF_ACTION == 'destroy') {
+              sh 'terraform init'
+              sh 'terraform destroy --auto-approve'
+              sh './delete-backend.sh'
+            } else {
+              sh './create-backend.sh'
+              sh 'terraform init'
+              sh 'terraform apply --auto-approve'
+
+              EC2_PUBLIC_IP = sh(
+                script: 'terraform output -raw ec2-public_ip',
+                returnStdout: true
+              ).trim()
+            }
+          }
+        }
+      }
+    }
+
     stage("deploy") {
       when {
         expression { params.TF_ACTION == 'apply' }
       }
+
       environment {
         DOCKER_CREDS = credentials('docker-hub-repo')
       }
+
       steps {
         script {
           echo "waiting for EC2 server to initialize"
@@ -88,21 +104,23 @@ pipeline {
 
           echo 'deploying docker image to EC2...'
           echo "${EC2_PUBLIC_IP}"
-          
+
           def ec2Instance = "ec2-user@${EC2_PUBLIC_IP}"
 
           sshagent(['docker-server']) {
             sh "scp -o StrictHostKeyChecking=no server-cmds.sh ${ec2Instance}:/home/ec2-user"
             sh "scp -o StrictHostKeyChecking=no docker-compose.yaml ${ec2Instance}:/home/ec2-user"
 
-            sh '''
-              ssh -o StrictHostKeyChecking=no \
-                ec2-user@${EC2_PUBLIC_IP} \
-                "bash ./server-cmds.sh ${IMAGE_NAME} ${DOCKER_CREDS_USR} ${DOCKER_CREDS_PSW}"
-            '''
+            withEnv(["EC2_INSTANCE=${ec2Instance}"]) {
+              sh '''
+                ssh -o StrictHostKeyChecking=no "$EC2_INSTANCE" \
+                  "bash ./server-cmds.sh ${IMAGE_NAME} ${DOCKER_CREDS_USR} ${DOCKER_CREDS_PSW}"
+              '''
+            }
           }
         }
       }
-    }               
+    }
+
   }
 }
